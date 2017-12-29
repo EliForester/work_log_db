@@ -1,14 +1,10 @@
-from datetime import datetime
 from peewee import *
 from work_log_db_models import Entry
 import sys
-import re
 
 
 class WorkLog():
     def __init__(self):
-        self.fieldnames = ['Date', 'Task Name', 'Time Spent', 'Notes']
-        self.database = ''
         self.log_data = []
 
     def get_data(self):
@@ -48,6 +44,7 @@ class WorkLog():
                 print('Invalid choice try again')
 
     def main_menu(self):
+        self.get_data()
         while 1:
             print(' -- Main Menu -- ')
             menu_choice = self.get_input('(V)iew, (N)ew, (S)earch, (Q)uit ')
@@ -97,59 +94,55 @@ class WorkLog():
         search_results = []
 
         if choice == 'u':
-            search_user = input('Please enter a user name to search: ')
-            search_results = Entry.select().where(Entry.user == search_user)
-
+            # As a user of the script, if finding by employee, I should be presented with a list of employees with
+            # entries and be able to choose one to see entries from.
+            user_list = [x.user for x in self.log_data]
+            user_list = sorted(set(user_list))
+            for single_user in user_list:
+                print(user_list.index(single_user), single_user)
+            user_chosen = user_list[self.get_input('Please enter the number of user  to search: ', user_list)]
+            search_results = Entry.select().where(Entry.user == user_chosen)
         if choice == 'd':
-    #        # When finding by date, I should be presented with a list of dates
-    #        # with entries and be able to choose one to see entries from.
-    #        dates_list = [x['Date'] for x in self.log_data]
-    #        dates_list = sorted(set(dates_list))
-    #        for date in dates_list:
-    #            print(dates_list.index(date), date)
-    #        date_chosen = self.get_input('Enter the number of date: ',
-    #                                     dates_list)
-    #        for entry in self.log_data:
-    #            if entry['Date'] == dates_list[date_chosen]:
-    #                search_results.append(entry)
-    #        self.print_results(search_results)
+            # When finding by date, I should be presented with a list of dates
+            # with entries and be able to choose one to see entries from.
+            dates_list = [x.date for x in self.log_data]
+            dates_list = sorted(set(dates_list))
+            for single_date in dates_list:
+                print(dates_list.index(single_date), single_date)
+            date_chosen = dates_list[self.get_input('Enter the number of date: ', dates_list)]
+            search_results = Entry.select().where((Entry.date.year == date_chosen.year) &
+                                                  (Entry.date.month == date_chosen.month) &
+                                                  (Entry.date.day == date_chosen.day))
         elif choice == 't':
-    #        # When finding by time spent, I should be allowed to enter the
-    #        # number of minutes a task took and be able to choose one to see
-    #        # entries from.
-    #        valid_time = 0
-    #        while valid_time == 0:
-    #            search_time_spent = input('Enter time spent (mins): ')
-    #            try:
-    #                search_time_spent = int(search_time_spent)
-    #                valid_time = 1
-    #            except ValueError:
-    #                print('Please enter an integer: ')
-    #        for line in self.log_data:
-    #            if line['Time Spent'] == search_time_spent:
-    #                search_results.append(line)
-    #        self.print_results(search_results)
+            # When finding by time spent, I should be allowed to enter the
+            # number of minutes a task took and be able to choose one to see
+            # entries from.
+            valid_time = 0
+            search_time_spent = 0
+            while valid_time == 0:
+                search_time_spent = input('Enter time spent (mins): ')
+                try:
+                    search_time_spent = int(search_time_spent)
+                    valid_time = 1
+                except ValueError:
+                    print('Please enter an integer: ')
+            search_results = Entry.select().where(Entry.time_spent == search_time_spent)
         elif choice == 'e':
-    #        # When finding by an exact string, I should be allowed to enter a
-    #        # string and then be presented with entries containing that string
-    #        # in the task name or notes.
-    #        search_string = input('Enter search string: ')
-    #        for line in self.log_data:
-    #            if search_string in line['Task Name'] \
-    #                    or search_string in line['Notes']:
-    #                search_results.append(line)
-    #        self.print_results(search_results)
+            # When finding by an exact string, I should be allowed to enter a
+            # string and then be presented with entries containing that string
+            # in the task name or notes.
+            search_string = input('Enter search string: ')
+            search_results = Entry.select().where(Entry.notes.contains(search_string) or
+                                                  Entry.task_name.contains(search_string))
         elif choice == 'p':
-    #        # When finding by a pattern, I should be allowed to enter a regular
-    #        # expression and then be presented with entries matching that
-    #        # pattern in their task name or notes.
-    #        search_regex = input('Enter search pattern: ')
-    #        search_regex = re.compile(search_regex)
-    #        for line in self.log_data:
-    #            if re.search(search_regex, line['Task Name']) \
-    #                    or re.search(search_regex, line['Notes']):
-    #                search_results.append(line)
-    #        self.print_results(search_results)
+            # When finding by a pattern, I should be allowed to enter a regular
+            # expression and then be presented with entries matching that
+            # pattern in their task name or notes.
+            search_regex = input('Enter search pattern: ')
+            search_results = Entry.select().where(
+                Entry.task_name.regexp(search_regex) or
+                Entry.notes.regexp(search_regex))
+        self.print_results(search_results)
 
     def print_results(self, results_list):
         list_length = results_list.__len__()
@@ -160,37 +153,6 @@ class WorkLog():
         else:
             for entry in results_list:
                 self.show_entry_pretty(entry)
-
-    #def convert_log_to_data(self, line):
-    #    # Convert strings from text file to data types for search/comparison
-    #    new_line = {}
-    #    for header in line:
-    #        if header == 'Date':
-    #            # Convert to datetime.date
-    #            new_line['Date'] = self.str_to_dt(line['Date'])
-    #        if header == 'Time Spent':
-    #            # Convert to int
-    #            try:
-    #                new_line['Time Spent'] = int(line['Time Spent'])
-    #            except ValueError as e:
-    #                print('Log file error', e)
-    #        else:
-    #            new_line[header] = line[header]
-    #    return new_line
-
-    #def dt_to_str(self, dt):
-    #    try:
-    #        date = datetime.strftime(dt, '%Y-%m-%d')
-    #        return date
-    #    except ValueError as e:
-    #        print('Problem with date:', dt, e.args[0])
-
-    #def str_to_dt(self, date_str):
-    #    try:
-    #        date = datetime.date(datetime.strptime(date_str, '%Y-%m-%d'))
-    #        return date
-    #    except ValueError as e:
-    #        print('Problem with date:', date_str, e.args[0])
 
     def show_log_pretty(self, show_index=None):
         self.get_data()
@@ -215,9 +177,13 @@ class WorkLog():
                 )
 
     def show_entry_pretty(self, entry_id):
-        entry = Entry.select().where(Entry.id == entry_id).first()
+        if type(entry_id) == int:
+            entry = Entry.select().where(Entry.id == entry_id).first()
+        else:
+            entry = entry_id
         print(
             'Date: ', entry.date,
+            'User: ', entry.user,
             'Task Name: ', entry.task_name,
             'Time Spent: ', entry.time_spent,
             'Notes: ', entry.notes
