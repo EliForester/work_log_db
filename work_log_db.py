@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import DatabaseError
 from work_log_db_models import Entry
 import sys
 
@@ -60,10 +60,10 @@ class WorkLog():
     def insert_new_entry(self, entry):
         try:
             new_entry = Entry.create(
-                user = entry['user'],
-                task_name = entry['task_name'],
-                time_spent = entry['time_spent'],
-                notes = entry['notes']
+                user=entry['user'],
+                task_name=entry['task_name'],
+                time_spent=entry['time_spent'],
+                notes=entry['notes']
             )
             return new_entry.id
         except DatabaseError as e:
@@ -94,13 +94,15 @@ class WorkLog():
         search_results = []
 
         if choice == 'u':
-            # As a user of the script, if finding by employee, I should be presented with a list of employees with
+            # As a user of the script, if finding by employee, I should be
+            # presented with a list of employees with
             # entries and be able to choose one to see entries from.
             user_list = [x.user for x in self.log_data]
             user_list = sorted(set(user_list))
             for single_user in user_list:
                 print(user_list.index(single_user), single_user)
-            user_chosen = user_list[self.get_input('Please enter the number of user  to search: ', user_list)]
+            user_chosen = user_list[self.get_input(
+                'Please enter the number of user  to search: ', user_list)]
             search_results = Entry.select().where(Entry.user == user_chosen)
         if choice == 'd':
             # When finding by date, I should be presented with a list of dates
@@ -109,10 +111,12 @@ class WorkLog():
             dates_list = sorted(set(dates_list))
             for single_date in dates_list:
                 print(dates_list.index(single_date), single_date)
-            date_chosen = dates_list[self.get_input('Enter the number of date: ', dates_list)]
-            search_results = Entry.select().where((Entry.date.year == date_chosen.year) &
-                                                  (Entry.date.month == date_chosen.month) &
-                                                  (Entry.date.day == date_chosen.day))
+            date_chosen = dates_list[self.get_input(
+                'Enter the number of date: ', dates_list)]
+            search_results = Entry.select().where(
+                (Entry.date.year == date_chosen.year) &
+                (Entry.date.month == date_chosen.month) &
+                (Entry.date.day == date_chosen.day))
         elif choice == 't':
             # When finding by time spent, I should be allowed to enter the
             # number of minutes a task took and be able to choose one to see
@@ -126,14 +130,16 @@ class WorkLog():
                     valid_time = 1
                 except ValueError:
                     print('Please enter an integer: ')
-            search_results = Entry.select().where(Entry.time_spent == search_time_spent)
+            search_results = Entry.select().where(
+                Entry.time_spent == search_time_spent)
         elif choice == 'e':
             # When finding by an exact string, I should be allowed to enter a
             # string and then be presented with entries containing that string
             # in the task name or notes.
             search_string = input('Enter search string: ')
-            search_results = Entry.select().where(Entry.notes.contains(search_string) or
-                                                  Entry.task_name.contains(search_string))
+            search_results = Entry.select().where(
+                Entry.notes.contains(search_string) or
+                Entry.task_name.contains(search_string))
         elif choice == 'p':
             # When finding by a pattern, I should be allowed to enter a regular
             # expression and then be presented with entries matching that

@@ -1,12 +1,15 @@
-from peewee import *
+from peewee import Model, DateField, CharField, TextField, IntegerField, \
+    OperationalError
 from playhouse.sqlite_ext import SqliteExtDatabase
 from datetime import datetime
 
 db = SqliteExtDatabase('work_log.db')
 
+
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class Entry(BaseModel):
     date = DateField(default=datetime.now)
