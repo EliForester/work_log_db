@@ -115,6 +115,7 @@ class WorkLog():
             print(self.show_entry_pretty(new_entry_insert))
 
     def search(self):
+        self.get_data()
         choice = self.get_input('Search by (U)ser, (D)ate, (T)ime spent, '
                                 '(E)xact, (P)attern ')
         search_results = []
@@ -127,8 +128,13 @@ class WorkLog():
             user_list = sorted(set(user_list))
             for single_user in user_list:
                 print(user_list.index(single_user), single_user)
-            user_chosen = user_list[self.get_input(
-                'Please enter the number of user  to search: ', user_list)]
+            user_chosen = self.get_input(
+                'Please enter the number of user  to search or (M)anual: ',
+                user_list)
+            if user_chosen == 'm':
+                user_chosen = input('Enter exact user name to search: ')
+            else:
+                user_chosen = user_list[user_chosen]
             search_results = self.get_user_search_results(user_chosen)
 
         if choice == 'd':
